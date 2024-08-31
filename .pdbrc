@@ -1,0 +1,122 @@
+# unittest.main is a rename of a class, TestProgram, inside python package 
+# unittest 
+# (/Users/xiangyuzhang/anaconda3/lib/python3.11/unittest/main.py:278). Thus, 
+# unittest.main does nothing but create a TestProgram class object with no 
+# argument. Here we break at the __init__ of class TestProgram.
+break /Users/xiangyuzhang/anaconda3/lib/python3.11/unittest/main.py:70
+continue
+step
+
+# we will execute this line: self.module = __import__(module)
+# __import__ is a python builtin function (src can be tracked in CPython), where
+# it takes the str name of a module, then return a module object which import 
+# name. You can use the dot syntax to access all object associate with this
+# module. For example, self.module.TestStringMethods().print_hello() creates
+# a TestStringMethods object and calls it print_hello method. And indeed we see
+# a message "hello my friend" in debug console.
+next
+self.module.TestStringMethods().print_hello()
+
+# we read sys.argv and store it in argv variable, which is ['learn_unittest.py']
+break /Users/xiangyuzhang/anaconda3/lib/python3.11/unittest/main.py:77
+continue
+
+# ################################ MAGIC ################################
+# we are going to enter the function parsing all test cases and make them 
+# ready to be ran. 
+break /Users/xiangyuzhang/anaconda3/lib/python3.11/unittest/main.py:100
+continue
+step
+
+# we are going to use a parser, self._main_parser (of type ArgumentParser), 
+# to parse ... and bind the result into self object (of type TestProgram) as 
+# a namespace. After this function call, self.tests would be a valid attribute
+# lookup, and it is a empty list. 
+b /Users/xiangyuzhang/anaconda3/lib/python3.11/unittest/main.py:136
+continue
+
+# we are going to create our test cases, this is the place all magic happens.
+# After executing this createTests function, self.test would be a valid attr
+# lookup, and as a container holding all three testing functions we are 
+# interested: test_upper, test_isupper, test_split.
+# one comment: self.defaultTest is init'ed as None in the __init__.
+b /Users/xiangyuzhang/anaconda3/lib/python3.11/unittest/main.py:150
+continue
+step
+
+
+# Inside createTests() method. self.testNames is an empty list and 
+# self.testNames is None, thus line 159 is executed.
+next
+
+# Step in function self.testLoader.loadTestsFromModule(self.module).
+# The returned value is assigned into self.test.
+b /Users/xiangyuzhang/anaconda3/lib/python3.11/unittest/main.py:159
+continue
+step
+
+# Iterate the module (learn_unittest.py), and find all attributes 
+# (['TestStringMethods', '__builtins__', '__file__', '__name__', 'unittest'])
+# who are a subclass of TestCase, which is TestStringMethods since it inherits
+# TestCase. Then you call loadTestsFromTestCase(...) on TestStringMethods, a 
+# class object.
+tbreak /Users/xiangyuzhang/anaconda3/lib/python3.11/unittest/loader.py:121
+continue
+
+# We are inside TestLoader.loadTestsFromTestCase with argument 
+# testCaseClass=TestStringMethods.
+# In English, what this function is doing is that
+# 1. get all valid test function name (via function getTestCaseNames)
+#    a. iterate over dir(testCaseClass), find all names which starts with 'test'
+#       and is a callable.
+#    b. sort them by name and return.
+# Thus, getTestCaseNames(..) returns ['test_isupper', 'test_split', 'test_upper']
+# 2. construct a container (unittest.suite.TestSuite) of callables, which holds
+# a list of callable functions, 
+# [TestStringMethods().test_isupper, TestStringMethods().test_split,
+#  TestStringMethods().test_upper]. When these function are called, also make 
+# sure records the final status. For example, loaded_suite._tests[0]() would 
+# return <unittest.result.TestResult run=1 errors=0 failures=0>.
+break /Users/xiangyuzhang/anaconda3/lib/python3.11/unittest/loader.py:86
+continue
+next
+next
+next
+next
+loaded_suite._tests[0]()
+
+# from here to return of function loadTestsFromModule, they are boring code.
+b /Users/xiangyuzhang/anaconda3/lib/python3.11/unittest/loader.py:126
+continue
+next
+next
+next
+next
+next
+
+# Now self.test is a container for all test we are going to run. We should see
+#"[<unittest.suite.TestSuite tests=[, ... <__main__.TestStringMethods testMethod=test_upper>]>]"
+# in the console.
+self.test._tests
+step
+step
+
+# self.runTests() would print the following message into the console.
+# -> self.runTests()
+# (Pdb) n
+# ...
+# ----------------------------------------------------------------------
+# Ran 3 tests in 0.001s
+
+# OK
+# SystemExit: False
+next
+
+
+
+
+
+
+
+
+# python3 -m pdb learn_unittest.py
